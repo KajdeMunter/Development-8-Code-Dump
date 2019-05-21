@@ -8,7 +8,7 @@
 // %A Structures?
 // %O Object
 
-// Unit 1
+// -----UNIT 1-----
 let square x = x * x
 let (add: int -> int -> int) = fun (x:int) (y:int) -> x + y
 
@@ -45,6 +45,33 @@ let rec toBinary n =
 let rec toBase n b =
     if n < 1 then ""
     else sprintf "%s%i" (toBase (n / b) b) (n % b)
+
+// -----UNIT 2-----
+let r = Random()
+let nextDouble = r.NextDouble()
+
+let randomFloatBetween min max = nextDouble * (max - min) + min
+
+type Point2D = { Position: (float*float) }
+    with 
+        static member Create(x:float, y:float) : Point2D = { Position=(x, y) }
+        static member CreateRandom(min, max) : Point2D = { Position=(randomFloatBetween min max, randomFloatBetween min max) }
+        member this.getX : float = fst(this.Position)
+        member this.getY : float = snd(this.Position)
+        static member Distance (fst:Point2D) (snd:Point2D) = Math.Sqrt(((fst.getX - snd.getX) ** 2.0) + ((fst.getY - snd.getY) ** 2.0))
+
+type Blob =
+    {
+        Position: Point2D
+        Size: int
+    }
+    with
+        static member Create : Blob = 
+            {
+                Position = Point2D.Create(randomFloatBetween -50.0 51.0, randomFloatBetween -50.0 51.0)
+                Size = r.Next(1, 6)
+            }
+        
 
 [<EntryPoint>]
 let main argv =
