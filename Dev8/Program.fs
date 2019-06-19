@@ -73,6 +73,60 @@ type Blob =
             }
         
 
+// -----UNIT 3-----
+let rec last (l:List<'a>) =
+    match l with
+    | hd :: [] -> Some hd
+    | _ :: tl -> last tl
+    | _ -> None
+
+
+let rec length (l:List<'a>) =
+    match l with
+    | [] -> 0
+    | _ :: tl -> 1 + length tl
+
+let rec unzip (l : List<'a * 'b>) : List<'a> * List<'b> =
+    match l with
+    | [] -> ([], [])
+    | (x,y) :: tl ->
+        let l1, l2 = unzip tl
+        x :: l1, y :: l2
+
+type ListElement<'a> =
+    | Element of 'a
+    | NestedList of List<ListElement<'a>>
+
+let rec flatten (l:List<ListElement<'a>>) : List<'a> =
+    match l with
+    | [] -> []
+    | Element hd :: tl -> hd :: (flatten tl) // If it isnt a nested element go to the next element
+    | NestedList nested :: tl -> // If there is a nested list then flatten the nested and concat it with the flattened tail
+        flatten nested @ (flatten tl)
+
+let rec rev (l:List<'a>) : List<'a> =
+    match l with
+    | [] -> []
+    | hd:'a :: tl -> (rev tl) @ [hd]
+
+let rec concat (l1:List<'a>) (l2:List<'a>) : List<'a> =
+    match (l1, l2) with
+    | ([],[]) -> []
+    | ([], _::_) -> l2
+    | (_::_, []) -> l1
+    | (hd1::tl1, hd2::tl2) ->
+        hd1::tl1 @ hd2::tl2
+
+let rec nth (n:int) (l:List<'a>) : Option<'a> =
+    match (n,l) with
+    | (n,_) when n < 0 -> None
+    | (_,[]) -> None
+    | (n,hd::_) when n = 0 -> Some hd
+    | (n,_::tl) -> nth (n-1)(tl)
+
+
+    
+
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#! \n"
@@ -89,5 +143,12 @@ let main argv =
     printfn "drawSymbols: %s" (drawSymbols "*" 5)
     printfn "%i in binary is: %s" 23 (toBinary 23)
     printfn "%i in base %i is: %s" 125 8 (toBase 125 8)
+
+    printfn "\n-----UNIT 3-----\n"
+    printfn "The last element of %A is %O" ([0..5]) (last [0..5])
+    printfn "The length of %A is %i" ([0..5]) (length [0..5])
+    printfn "The reverse of %A is %A" ([0..5]) (rev [0..5])
+    printfn "Concatted %A and %A is %A" ([0..2]) ([3..5]) (concat ([0..2]) ([3..5]))
+    printfn "element %i of %A is %O" (1) ([0..3]) (nth 1 [0..3])
 
     0 // return an integer exit code
