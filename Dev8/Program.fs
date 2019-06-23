@@ -123,9 +123,55 @@ let rec nth (n:int) (l:List<'a>) : Option<'a> =
     | (_,[]) -> None
     | (n,hd::_) when n = 0 -> Some hd
     | (n,_::tl) -> nth (n-1)(tl)
+   
+let splitAt (i:int) (l:List<'a>) : List<'a> * List<'a> =
+    let rec splitUtil i l acc = // Use an accumulator to hold traversed elements 
+        match l with
+        | [] -> rev acc, [] // there is no element left to traverse
+        | _ when i = 0 -> rev acc, l // you have reached i
+        | hd::tl' -> splitUtil (i-1) tl' (hd::acc)
+    splitUtil i l []
 
+(*
+split 2 [1;2;3]         -> call splitUtil
+splitUtil 2 [1;2;3] []  -> Match case 3 of hd::tl'
+splitUtil 1 [2;3] [1]   -> Match case 3 of hd::tl'
+splitUtil 0 [3] [2;1]   -> Match case 2 of i=0
+List.rev [2;1], [3]     -> call List.rev on acc
+return [1;2], [3]
+*)
 
-    
+// two sorted lists into a single sorted list
+let rec merge (l1:List<'a>) (l2:List<'a>) : List<'a> =
+    match (l1,l2) with
+    | (_,[]) -> []
+    | ([],_) -> []
+    | ([],[]) -> []
+    | (hd::tl, hd2::tl2) when hd > hd2 -> hd2 :: (merge (tl)(tl2))
+    | (hd::tl, hd2::tl2) when hd <= hd2 -> hd :: (merge (tl)(tl2))
+
+let rec mapList (f:'a -> 'b) (l:List<'a>) : List<'b> =
+    match l with
+    | [] -> []
+    | hd::tl -> f hd :: mapList f tl
+
+let rec filterList (p:'a -> bool) (l:List<'a>) =
+    match l with
+    | [] -> []
+    | hd::tl when p hd -> hd::filterList p tl
+    | _::tl -> filterList p tl
+
+let rec foldList (z:'b) (f: 'a -> 'b -> 'b) (l:List<'a>) : 'b =
+    match l with
+    | [] -> z // z will be the 'endstate'
+    | hd::tl -> f hd (foldList z f tl)
+
+let rec mapFoldList (f : 'a -> 'b) (l:List<'a>) : List<'b> =
+    foldList [] (fun mapList hd -> mapList @ [f hd]) l
+
+// let rec filterFoldList (f:'a -> bool) (l:List<'a>) : List<'a> =
+//    foldList [] (fun filterList hd -> if f hd then hd :: filterList else filterList) l
+
 
 [<EntryPoint>]
 let main argv =
