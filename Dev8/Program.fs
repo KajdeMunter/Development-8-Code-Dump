@@ -166,12 +166,68 @@ let rec foldList (z:'b) (f: 'a -> 'b -> 'b) (l:List<'a>) : 'b =
     | [] -> z // z will be the 'endstate'
     | hd::tl -> f hd (foldList z f tl)
 
-let rec mapFoldList (f : 'a -> 'b) (l:List<'a>) : List<'b> =
+let mapFoldList (f : 'a -> 'b) (l:List<'a>) : List<'b> =
     foldList [] (fun mapList hd -> mapList @ [f hd]) l
+
+let mapFold (f : 'a -> 'b) (l : List<'a>) : List<'b> =
+  l |> List.fold (fun mappedList x -> mappedList @ [f x]) []
+
 
 // let rec filterFoldList (f:'a -> bool) (l:List<'a>) : List<'a> =
 //    foldList [] (fun filterList hd -> if f hd then hd :: filterList else filterList) l
 
+let filterFold (f : 'a -> bool) (l : List<'a>) : List<'a> =
+  l |> List.fold 
+          (fun filteredList hd -> 
+            if f hd then 
+              hd :: filteredList 
+            else
+              filteredList) [] |> List.rev
+
+let flattenList (l : List<List<'a>>) : List<'a> =
+  l |> List.fold (fun flattenedList l -> flattenedList @ l) []
+
+
+
+// ------ sample exam ------
+type Entry<'k, 'v> =
+    {
+        Key: 'k
+        Value: 'v
+    }
+    with
+        static member Create(key:'k, value: 'v) =
+            {
+                Key = key
+                Value = value
+            }
+
+type BinaryNode<'k, 'v> when 'k : comparison =
+    {
+        Entry: Entry<'k, 'v>
+        Left: BinarySearchTree<'k, 'v>
+        Right: BinarySearchTree<'k, 'v>
+    }
+    with
+        static member Create(entry:Entry<'k,'v>, left:BinarySearchTree<'k,'v>, right:BinarySearchTree<'k,'v>) =
+            {
+                Entry = entry
+                Left = left
+                Right = right
+            }
+and BinarySearchTree<'k, 'v> when 'k : comparison =
+    | Empty
+    | Node of BinaryNode<'k, 'v>
+
+let rec findKey (key:'k) (tree:BinarySearchTree<'k, 'v>) : Option<'v> =
+    match (key,tree) with
+    | (key, Node node) when key = node.Entry.Key -> Some(node.Entry.Value)
+    | (key, Node node) when key < node.Entry.Key -> findKey key node.Right
+    | (key, Node node) when key > node.Entry.Key -> findKey key node.Left
+    | (_,_) -> None
+
+let curry f a b = f (a,b)
+let uncurry f (a,b) = f a b
 
 [<EntryPoint>]
 let main argv =
