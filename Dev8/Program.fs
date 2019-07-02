@@ -145,8 +145,8 @@ let rec merge (l1:List<'a>) (l2:List<'a>) : List<'a> =
     | (_,[]) -> []
     | ([],_) -> l2
     | ([],[]) -> l1
-    | (hd::tl, hd2::tl2) when hd > hd2 -> hd2 :: (merge (l1)(tl2))
-    | (hd::tl, hd2::tl2) when hd <= hd2 -> hd :: (merge (tl)(l2))
+    | (hd::_, hd2::tl2) when hd > hd2 -> hd2 :: (merge (l1)(tl2))
+    | (hd::tl, hd2::_) when hd <= hd2 -> hd :: (merge (tl)(l2))
 
 let rec mapList (f:'a -> 'b) (l:List<'a>) : List<'b> =
     match l with
