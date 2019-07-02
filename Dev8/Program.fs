@@ -37,7 +37,6 @@ let rec drawSymbols symbol length =
     if length < 1 then ""
     else symbol + drawSymbols symbol (length-1)
 
-
 let rec toBinary n =
     if n < 1 then ""
     else sprintf "%s%i" (toBinary (n/2)) (n % 2)
@@ -114,8 +113,7 @@ let rec concat (l1:List<'a>) (l2:List<'a>) : List<'a> =
     | ([],[]) -> []
     | ([], _::_) -> l2
     | (_::_, []) -> l1
-    | (hd1::tl1, hd2::tl2) ->
-        hd1::tl1 @ hd2::tl2
+    | (hd1::tl1,_) -> hd1 :: (concat tl1 l2)
 
 let rec nth (n:int) (l:List<'a>) : Option<'a> =
     match (n,l) with
@@ -145,10 +143,10 @@ return [1;2], [3]
 let rec merge (l1:List<'a>) (l2:List<'a>) : List<'a> =
     match (l1,l2) with
     | (_,[]) -> []
-    | ([],_) -> []
-    | ([],[]) -> []
-    | (hd::tl, hd2::tl2) when hd > hd2 -> hd2 :: (merge (tl)(tl2))
-    | (hd::tl, hd2::tl2) when hd <= hd2 -> hd :: (merge (tl)(tl2))
+    | ([],_) -> l2
+    | ([],[]) -> l1
+    | (hd::tl, hd2::tl2) when hd > hd2 -> hd2 :: (merge (l1)(tl2))
+    | (hd::tl, hd2::tl2) when hd <= hd2 -> hd :: (merge (tl)(l2))
 
 let rec mapList (f:'a -> 'b) (l:List<'a>) : List<'b> =
     match l with
@@ -172,7 +170,6 @@ let mapFoldList (f : 'a -> 'b) (l:List<'a>) : List<'b> =
 let mapFold (f : 'a -> 'b) (l : List<'a>) : List<'b> =
   l |> List.fold (fun mappedList x -> mappedList @ [f x]) []
 
-
 // let rec filterFoldList (f:'a -> bool) (l:List<'a>) : List<'a> =
 //    foldList [] (fun filterList hd -> if f hd then hd :: filterList else filterList) l
 
@@ -186,8 +183,6 @@ let filterFold (f : 'a -> bool) (l : List<'a>) : List<'a> =
 
 let flattenList (l : List<List<'a>>) : List<'a> =
   l |> List.fold (fun flattenedList l -> flattenedList @ l) []
-
-
 
 // ------ sample exam ------
 type Entry<'k, 'v> =
@@ -229,6 +224,11 @@ let rec findKey (key:'k) (tree:BinarySearchTree<'k, 'v>) : Option<'v> =
 let curry f a b = f (a,b)
 let uncurry f (a,b) = f a b
 
+let compress (l:List<'a>) : List<'a> =
+    match l with
+    | [] -> []
+    | (hd::tl) -> List.fold (fun (acc:list<'a>) e -> if acc.Head = e then acc else e::acc) [hd] tl |> List.rev
+
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#! \n"
@@ -252,5 +252,6 @@ let main argv =
     printfn "The reverse of %A is %A" ([0..5]) (rev [0..5])
     printfn "Concatted %A and %A is %A" ([0..2]) ([3..5]) (concat ([0..2]) ([3..5]))
     printfn "element %i of %A is %O" (1) ([0..3]) (nth 1 [0..3])
+    printfn "Merged list %A and %A is %A" ([0..3]) ([2..5]) (merge ([0..3]) ([2..5]))
 
     0 // return an integer exit code
