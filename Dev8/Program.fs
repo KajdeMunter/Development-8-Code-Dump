@@ -79,7 +79,6 @@ let rec last (l:List<'a>) =
     | _ :: tl -> last tl
     | _ -> None
 
-
 let rec length (l:List<'a>) =
     match l with
     | [] -> 0
@@ -106,14 +105,14 @@ let rec flatten (l:List<ListElement<'a>>) : List<'a> =
 let rec rev (l:List<'a>) : List<'a> =
     match l with
     | [] -> []
-    | hd:'a :: tl -> (rev tl) @ [hd]
+    | hd::tl -> (rev tl) @ [hd]
 
 let rec concat (l1:List<'a>) (l2:List<'a>) : List<'a> =
     match (l1, l2) with
     | ([],[]) -> []
     | ([],_) -> l2
     | (_, []) -> l1
-    | (hd1::tl1,_) -> hd1 :: (concat tl1 l2)
+    | (hd::tl,_) -> hd :: (concat tl l2)
 
 let rec nth (n:int) (l:List<'a>) : Option<'a> =
     match (n,l) with
@@ -127,13 +126,13 @@ let splitAt (i:int) (l:List<'a>) : List<'a> * List<'a> =
         match l with
         | [] -> rev acc, [] // there is no element left to traverse
         | _ when i = 0 -> rev acc, l // you have reached i
-        | hd::tl' -> splitUtil (i-1) tl' (hd::acc)
+        | hd::tl -> splitUtil (i-1) tl (hd::acc)
     splitUtil i l []
 
 (*
 split 2 [1;2;3]         -> call splitUtil
-splitUtil 2 [1;2;3] []  -> Match case 3 of hd::tl'
-splitUtil 1 [2;3] [1]   -> Match case 3 of hd::tl'
+splitUtil 2 [1;2;3] []  -> Match case 3 of hd::tl
+splitUtil 1 [2;3] [1]   -> Match case 3 of hd::tl
 splitUtil 0 [3] [2;1]   -> Match case 2 of i=0
 List.rev [2;1], [3]     -> call List.rev on acc
 return [1;2], [3]
@@ -229,6 +228,13 @@ let compress (l:List<'a>) : List<'a> =
     | [] -> []
     | (hd::tl) -> List.fold (fun (acc:list<'a>) e -> if acc.Head = e then acc else e::acc) [hd] tl |> List.rev
 
+// TODO: should probably be with option
+let rec zip (l1:List<'a>) (l2:List<'b>) : List<'a*'b> =
+    match (l1,l2) with
+    | _ when l1.Length <> l2.Length -> []
+    | (hd::tl,hd1::tl1) -> (hd,hd1) :: zip tl tl1
+    | _ -> []
+
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#! \n"
@@ -251,6 +257,8 @@ let main argv =
     printfn "The length of %A is %i" ([0..5]) (length [0..5])
     printfn "The reverse of %A is %A" ([0..5]) (rev [0..5])
     printfn "Concatted %A and %A is %A" ([0..2]) ([3..5]) (concat ([0..2]) ([3..5]))
+    printfn "Split %A at %i is %A" ([0..5]) 2 (splitAt 2 [0..5])
+    printfn "Zipped %A and %A is %A" ([0..4]) ([1..5]) (zip [0..4] [1..5])
     printfn "element %i of %A is %O" (1) ([0..3]) (nth 1 [0..3])
     printfn "Merged list %A and %A is %A" ([0..3]) ([2..5]) (merge ([0..3]) ([2..5]))
 
