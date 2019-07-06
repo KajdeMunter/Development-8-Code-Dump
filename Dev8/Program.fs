@@ -111,8 +111,8 @@ let rec rev (l:List<'a>) : List<'a> =
 let rec concat (l1:List<'a>) (l2:List<'a>) : List<'a> =
     match (l1, l2) with
     | ([],[]) -> []
-    | ([], _::_) -> l2
-    | (_::_, []) -> l1
+    | ([],_) -> l2
+    | (_, []) -> l1
     | (hd1::tl1,_) -> hd1 :: (concat tl1 l2)
 
 let rec nth (n:int) (l:List<'a>) : Option<'a> =
