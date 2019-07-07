@@ -108,18 +108,16 @@ let rec rev (l:List<'a>) : List<'a> =
     | hd::tl -> (rev tl) @ [hd]
 
 let rec concat (l1:List<'a>) (l2:List<'a>) : List<'a> =
-    match (l1, l2) with
-    | ([],[]) -> []
-    | ([],_) -> l2
-    | (_, []) -> l1
-    | (hd::tl,_) -> hd :: (concat tl l2)
+    match l1 with
+    | [] -> l2
+    | hd :: tl -> hd :: (concat tl l2)
 
 let rec nth (n:int) (l:List<'a>) : Option<'a> =
-    match (n,l) with
-    | (n,_) when n < 0 -> None
-    | (_,[]) -> None
-    | (n,hd::_) when n = 0 -> Some hd
-    | (n,_::tl) -> nth (n-1)(tl)
+    match (l) with
+    | _ when n < 0 -> None
+    | [] -> None
+    | hd::_ when n = 0 -> Some hd
+    | _::tl -> nth (n-1)(tl)
    
 let splitAt (i:int) (l:List<'a>) : List<'a> * List<'a> =
     let rec splitUtil i l acc = // Use an accumulator to hold traversed elements 
@@ -141,11 +139,11 @@ return [1;2], [3]
 // two sorted lists into a single sorted list
 let rec merge (l1:List<'a>) (l2:List<'a>) : List<'a> =
     match (l1,l2) with
-    | (_,[]) -> []
     | ([],_) -> l2
-    | ([],[]) -> l1
+    | (_,[]) -> l1
     | (hd::_, hd2::tl2) when hd > hd2 -> hd2 :: (merge (l1)(tl2))
     | (hd::tl, hd2::_) when hd <= hd2 -> hd :: (merge (tl)(l2))
+    | _ -> []
 
 let rec mapList (f:'a -> 'b) (l:List<'a>) : List<'b> =
     match l with
@@ -158,11 +156,13 @@ let rec filterList (p:'a -> bool) (l:List<'a>) =
     | hd::tl when p hd -> hd::filterList p tl
     | _::tl -> filterList p tl
 
-let rec foldList (z:'b) (f: 'a -> 'b -> 'b) (l:List<'a>) : 'b =
+// Not correct
+let rec foldList (state:'state) (f: 'state -> 'a -> 'state) (l:List<'a>) : 'state =
     match l with
-    | [] -> z // z will be the 'endstate'
-    | hd::tl -> f hd (foldList z f tl)
+    | [] -> state // z will be the 'endstate'
+    | hd::tl -> f hd (foldList state f tl)
 
+// Not correct
 let mapFoldList (f : 'a -> 'b) (l:List<'a>) : List<'b> =
     foldList [] (fun mapList hd -> mapList @ [f hd]) l
 
@@ -228,12 +228,15 @@ let compress (l:List<'a>) : List<'a> =
     | [] -> []
     | (hd::tl) -> List.fold (fun (acc:list<'a>) e -> if acc.Head = e then acc else e::acc) [hd] tl |> List.rev
 
-// TODO: should probably be with option
-let rec zip (l1:List<'a>) (l2:List<'b>) : List<'a*'b> =
+let rec zip (l1:List<'a>) (l2:List<'b>) : Option<List<'a*'b>> =
     match (l1,l2) with
-    | _ when l1.Length <> l2.Length -> []
-    | (hd::tl,hd1::tl1) -> (hd,hd1) :: zip tl tl1
-    | _ -> []
+    | ([],[]) -> Some []
+    | (hd::tl,hd1::tl1) -> 
+        let tailres = zip tl tl1
+        match tailres with
+        | Some l -> Some((hd,hd1) :: l)
+        | None -> None
+    | (_,_) -> None
 
 [<EntryPoint>]
 let main argv =
